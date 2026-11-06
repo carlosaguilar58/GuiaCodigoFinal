@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examen: Arquitectura Wish Plash</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        wishBlue: '#005C8A',
+                        wishCyan: '#00A8E8',
+                        wishLight: '#E0F7FA',
+                        wishGreen: '#4CAF50',
+                        wishRed: '#F44336',
+                        wishOrange: '#FF9800'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* La fuente monospace garantiza que los espacios de relleno midan exactamente lo mismo visualmente */
+        .opcion-texto {
+            white-space: pre;
+            font-family: monospace;
+            font-size: 0.95rem;
+        }
+        @media (max-width: 640px) {
+            .opcion-texto { font-size: 0.8rem; white-space: pre-wrap; }
+        }
+    </style>
+</head>
+<body class="bg-wishLight h-full flex flex-col antialiased text-wishBlue selection:bg-wishCyan selection:text-white">
+
+    <!-- Encabezado -->
+    <header class="bg-white border-b border-cyan-100 px-4 py-4 shadow-sm sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-wishCyan flex items-center justify-center text-white text-xl shadow-md">
+                🏗️
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-tight">Wish Plash - Arquitectura del Sistema</h1>
+                <p class="text-xs text-slate-500">Examen Técnico: BD, Calendario y Flujos</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenedor Principal -->
+    <main class="flex-1 max-w-3xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center">
+
+        <!-- PANTALLA DE INICIO -->
+        <div id="pantalla-inicio" class="bg-white rounded-2xl p-8 sm:p-12 shadow-sm border border-cyan-100 text-center space-y-6">
+            <div class="text-6xl mb-4">🧠</div>
+            <h2 class="text-3xl font-bold">Evaluación General del Proyecto</h2>
+            <p class="text-slate-600">
+                Pon a prueba tu conocimiento sobre la lógica de la base de datos (Almacen), el diseño del Calendario, el estado compartido (ReservaActual) y el flujo de los pagos y cancelaciones.
+            </p>
+            <ul class="text-sm text-slate-500 text-left bg-slate-50 p-4 rounded-xl inline-block w-full sm:w-auto mx-auto space-y-2">
+                <li>✅ 15 preguntas de opción múltiple.</li>
+                <li>🔀 Orden de preguntas y respuestas aleatorio.</li>
+                <li>📏 Opciones de longitud idéntica (anti-adivinanzas).</li>
+                <li>💡 Explicación detallada inmediata al responder.</li>
+            </ul>
+            <div class="pt-4">
+                <button onclick="iniciarExamen()" class="w-full sm:w-auto px-8 py-3 bg-wishCyan text-white font-bold rounded-xl shadow-md hover:bg-sky-500 hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+                    Comenzar Examen 🚀
+                </button>
+            </div>
+        </div>
+
+        <!-- PANTALLA DE EXAMEN -->
+        <div id="pantalla-examen" class="hidden space-y-6">
+            <!-- Barra de progreso -->
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-cyan-100 flex justify-between items-center">
+                <div class="flex items-center space-x-4 w-full">
+                    <span id="txt-progreso" class="font-bold text-sm">1 / 15</span>
+                    <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                        <div id="barra-progreso" class="bg-wishCyan h-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="ml-4 font-semibold text-sm whitespace-nowrap">
+                    Puntos: <span id="txt-puntuacion" class="text-wishCyan font-bold">0</span>
+                </div>
+            </div>
+
+            <!-- Contenedor de la Pregunta -->
+            <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-cyan-100 space-y-6">
+                <h3 id="txt-pregunta" class="text-lg sm:text-xl font-bold leading-snug"></h3>
+                
+                <!-- Opciones -->
+                <div id="contenedor-opciones" class="grid grid-cols-1 gap-3"></div>
+
+                <!-- Panel de Retroalimentación -->
+                <div id="panel-feedback" class="hidden rounded-xl p-5 border text-sm transition-all shadow-sm">
+                    <div id="feedback-titulo" class="font-bold text-base mb-2 flex items-center space-x-2"></div>
+                    <p id="feedback-texto" class="text-slate-700 leading-relaxed"></p>
+                </div>
+
+                <!-- Botón Siguiente -->
+                <div class="flex justify-end pt-2">
+                    <button id="btn-siguiente" onclick="siguientePregunta()" class="hidden px-6 py-3 bg-wishBlue text-white font-bold rounded-xl shadow-sm hover:bg-opacity-90 transition-all">
+                        Siguiente Pregunta →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANTALLA DE RESULTADOS -->
+        <div id="pantalla-resultados" class="hidden bg-white rounded-2xl p-8 sm:p-12 shadow-sm border border-cyan-100 text-center space-y-6">
+            <div id="icono-resultado" class="text-7xl mb-2">🎓</div>
+            <h2 class="text-3xl font-bold">Examen Finalizado</h2>
+            <p class="text-slate-600">Has completado la evaluación de la arquitectura del sistema Wish Plash.</p>
+            
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-8 inline-block w-full sm:w-2/3 mx-auto">
+                <div class="text-sm text-slate-500 uppercase font-semibold tracking-wider mb-2">Tu Puntuación</div>
+                <div id="txt-puntuacion-final" class="text-6xl font-extrabold text-wishCyan">0 / 15</div>
+                <div id="txt-mensaje-final" class="font-bold mt-4 text-lg text-wishBlue"></div>
+            </div>
+
+            <div class="pt-6">
+                <button onclick="volverAlInicio()" class="w-full sm:w-auto px-8 py-3 bg-wishCyan text-white font-bold rounded-xl shadow-md hover:bg-sky-500 transition-all">
+                    🔄 Reiniciar Examen
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // BANCO DE 15 PREGUNTAS SOBRE LA GUÍA DE ARQUITECTURA
+        const bancoPreguntas = [
+            {
+                pregunta: "¿Qué método se utiliza en 'Almacen.cs' para asegurar el guardado de datos borrando y reescribiendo todas las tablas de SQLite?",
+                opciones: [
+                    { texto: "El método Almacen.Guardar()", correcta: true },
+                    { texto: "El método Almacen.UpdateAll", correcta: false },
+                    { texto: "El método SQLite.Commit()", correcta: false },
+                    { texto: "El método Almacen.WriteDB()", correcta: false }
+                ],
+                explicacion: "Almacen.Guardar() borra y vuelve a insertar todos los datos dentro de una transacción. Funciona bien con pocos datos pero podría ser lento con miles de reservas."
+            },
+            {
+                pregunta: "¿Cómo se construye la interfaz visual del componente 'CalendarioQuintas.cs'?",
+                opciones: [
+                    { texto: "Dibujado 100% por código C#", correcta: true },
+                    { texto: "Usando un archivo XAML puro", correcta: false },
+                    { texto: "Mediante el control Calendar", correcta: false },
+                    { texto: "Cargando un WebView de HTML", correcta: false }
+                ],
+                explicacion: "CalendarioQuintas.cs es un control propio que se dibuja entero por código C# (sin archivo XAML), armando la rejilla de 7 columnas y dibujando los colores por días."
+            },
+            {
+                pregunta: "¿Qué clase actúa como 'memoria compartida' guardando los datos (quinta, fecha, porcentaje) mientras el cliente avanza por las pantallas?",
+                opciones: [
+                    { texto: "La clase ReservaActual  ", correcta: true },
+                    { texto: "La clase SesionDeCliente", correcta: false },
+                    { texto: "La clase NavegacionDatos", correcta: false },
+                    { texto: "La clase GlobalVariables", correcta: false }
+                ],
+                explicacion: "ReservaActual es una clase estática que actúa como un 'carrito de memoria' temporal. Guarda la quinta, fecha, extras y la operación a realizar antes del pago."
+            },
+            {
+                pregunta: "Durante el flujo de pago, ¿qué método decide si se está creando una reserva nueva o si se está pagando el saldo de una existente?",
+                opciones: [
+                    { texto: "Navegacion.FinalizarPago", correcta: true },
+                    { texto: "PagoPage.ProcesarPago() ", correcta: false },
+                    { texto: "ReservaActual.Evaluar() ", correcta: false },
+                    { texto: "Almacen.RegistrarPago() ", correcta: false }
+                ],
+                explicacion: "Navegacion.FinalizarPago() es el punto de entrada que evalúa si hay una 'operación' pendiente (saldo/cambio de fecha) o si debe crear una reserva desde cero."
+            },
+            {
+                pregunta: "En el calendario, ¿qué color se utiliza para marcar los días bloqueados por el administrador por concepto de 'Mantenimiento'?",
+                opciones: [
+                    { texto: "Color Naranja (Mantenimiento)", correcta: true },
+                    { texto: "Color Rojo (Mantenimiento)   ", correcta: false },
+                    { texto: "Color Gris (Mantenimiento)   ", correcta: false },
+                    { texto: "Color Azul (Mantenimiento)   ", correcta: false }
+                ],
+                explicacion: "Las fechas bloqueadas por mantenimiento se pintan de naranja, mientras que las reservas confirmadas se pintan de rojo ('Reservada')."
+            },
+            {
+                pregunta: "¿Qué sucede exactamente en la base de datos (SQLite) cuando un cliente cancela una reservación?",
+                opciones: [
+                    { texto: "Queda con Cancelada = true ", correcta: true },
+                    { texto: "Se borra la fila de SQLite ", correcta: false },
+                    { texto: "Se mueve a la tabla Papelera", correcta: false },
+                    { texto: "El ID se pone en null o cero", correcta: false }
+                ],
+                explicacion: "No se borra el registro de la base de datos. Se marca la columna Cancelada = true con su fecha para que siga apareciendo en los reportes de administración."
+            },
+            {
+                pregunta: "¿Cuál es el costo extra fijo que el sistema cobra al cliente por utilizar la opción de cambiar la fecha de su reserva?",
+                opciones: [
+                    { texto: "$500 MXN de cargo fijo.", correcta: true },
+                    { texto: "$250 MXN de cargo fijo.", correcta: false },
+                    { texto: "$100 MXN de cargo fijo.", correcta: false },
+                    { texto: "$800 MXN de cargo fijo.", correcta: false }
+                ],
+                explicacion: "El costo fijo por cambio de fecha está programado en Reservas.CostoCambioFecha y es exactamente de $500 MXN."
+            },
+            {
+                pregunta: "¿Qué condición estricta debe cumplirse en la interfaz del Carrito para que el botón 'Continuar al pago' se habilite?",
+                opciones: [
+                    { texto: "Elegir quinta y la fecha", correcta: true },
+                    { texto: "Elegir fecha y un extra ", correcta: false },
+                    { texto: "Elegir método de pago en", correcta: false },
+                    { texto: "Aceptar términos de usos", correcta: false }
+                ],
+                explicacion: "El carrito desactiva el botón hasta que valide que la quinta pasó correctamente desde la ventana anterior y el usuario ha dado clic a una fecha libre en el calendario."
+            },
+            {
+                pregunta: "¿En cuántos archivos diferentes del proyecto están escritos por separado (hardcodeados) los precios de los extras (DJ, Decoración, Seguridad)?",
+                opciones: [
+                    { texto: "Están en tres archivos.", correcta: true },
+                    { texto: "Están en un solo archivo.", correcta: false },
+                    { texto: "Están en la base SQLite.", correcta: false },
+                    { texto: "Están en cinco archivos.", correcta: false }
+                ],
+                explicacion: "Según la guía, están escritos manualmente en 3 lugares: CarritoPage.xaml.cs, ReservaActual.cs y TicketArchivos.cs. Si cambias un precio, debes cambiarlo en los tres."
+            },
+            {
+                pregunta: "¿Qué condición determina que el botón del 'Carrito' se active o desactive en el menú de navegación del cliente (PaginaUsuarioPage)?",
+                opciones: [
+                    { texto: "Tener una quinta elegida", correcta: true },
+                    { texto: "Haber iniciado la sesión", correcta: false },
+                    { texto: "Tener saldo a su favor  ", correcta: false },
+                    { texto: "No tener fecha ocupada  ", correcta: false }
+                ],
+                explicacion: "En PaginaUsuarioPage.xaml.cs, el botón de Carrito se activa exclusivamente si el sistema detecta que ya hay una quinta guardada en la memoria (ReservaActual)."
+            },
+            {
+                pregunta: "¿En qué situación exacta se muestra el botón 'Pagar saldo' dentro de la pantalla de Mis Reservaciones?",
+                opciones: [
+                    { texto: "Si pagó el 50% y debe dinero", correcta: true },
+                    { texto: "Si su reserva fue cancelada ", correcta: false },
+                    { texto: "Si pidió un cambio de fecha ", correcta: false },
+                    { texto: "Si la fecha del evento pasó ", correcta: false }
+                ],
+                explicacion: "El cálculo lógico en ReservasPage verifica si Pendiente (Total - Pagado) es mayor a 0. Solo si debe dinero de su anticipo del 50%, aparece el botón."
+            },
+            {
+                pregunta: "¿Cuáles son los filtros rápidos disponibles en la botonera superior de la pantalla 'SucursalesPage'?",
+                opciones: [
+                    { texto: "Todas, Palapa, Alberca, Popular, Capacidad", correcta: true },
+                    { texto: "Libres, Ocupadas, Caras, Baratas, Cercanas", correcta: false },
+                    { texto: "Pequeñas, Medianas, Grandes, VIP, Premium ", correcta: false },
+                    { texto: "Norte, Sur, Centro, Eventos, Empresariales", correcta: false }
+                ],
+                explicacion: "Los botones de filtrado rápido configurados en SucursalesPage.xaml.cs son: Todas, Palapa, Alberca, Popular y Capacidad."
+            },
+            {
+                pregunta: "Si un administrador deshabilita una quinta en 'AdminEventosPage', ¿qué sucede con el sistema?",
+                opciones: [
+                    { texto: "Impide nuevas reservas, las actuales siguen.", correcta: true },
+                    { texto: "Cancela automáticamente todas las reservas. ", correcta: false },
+                    { texto: "Elimina la quinta de la base de datos SQL.  ", correcta: false },
+                    { texto: "Se borran los días de mantenimiento activos.", correcta: false }
+                ],
+                explicacion: "Deshabilitar una quinta apaga el botón 'Reservar' en la vista del cliente. Las reservas que ya estaban pagadas y confirmadas en fechas futuras no se alteran."
+            },
+            {
+                pregunta: "¿Qué métricas principales muestran las gráficas por día en la pantalla del administrador 'AdminReportePage'?",
+                opciones: [
+                    { texto: "Las reservas e ingresos por día. ", correcta: true },
+                    { texto: "Las visitas y clics de usuarios. ", correcta: false },
+                    { texto: "Los correos y PDFs enviados hoy. ", correcta: false },
+                    { texto: "El tiempo de uso de la app IA.   ", correcta: false }
+                ],
+                explicacion: "AdminReportePage dibuja gráficas analíticas que muestran la cantidad de reservaciones realizadas y los ingresos monetarios generados en cada día de la semana seleccionada."
+            },
+            {
+                pregunta: "Si es la primera vez que se abre la aplicación y no existe la base de datos 'wishplash.db', ¿qué acción toma 'Almacen.Iniciar()'?",
+                opciones: [
+                    { texto: "Crea tablas y guarda datos de ejemplo", correcta: true },
+                    { texto: "Lanza un error de sistema fatal crash", correcta: false },
+                    { texto: "Pide credenciales de SQLite al admin.", correcta: false },
+                    { texto: "Descarga un archivo XML de la red web", correcta: false }
+                ],
+                explicacion: "Almacen.Iniciar() verifica si la base existe. Si no, crea las tablas desde cero (CREATE TABLE) e inserta a los administradores y quintas base para que la app funcione de inmediato."
+            }
+        ];
+
+        let preguntasMezcladas = [];
+        let indiceActual = 0;
+        let puntuacion = 0;
+
+        // Mezclar arreglos (Fisher-Yates)
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex > 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // Padding algorítmico: todas las opciones miden lo mismo añadiendo espacios
+        function padOpciones(opciones) {
+            let maxLength = 0;
+            opciones.forEach(op => { if (op.texto.length > maxLength) maxLength = op.texto.length; });
+            
+            return opciones.map(op => {
+                let diff = maxLength - op.texto.length;
+                let padding = ' '.repeat(diff); 
+                return {
+                    texto: op.texto + padding,
+                    correcta: op.correcta
+                };
+            });
+        }
+
+        function cambiarPantalla(idMostrar) {
+            ['pantalla-inicio', 'pantalla-examen', 'pantalla-resultados'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(idMostrar).classList.remove('hidden');
+        }
+
+        function iniciarExamen() {
+            let copiaPreguntas = JSON.parse(JSON.stringify(bancoPreguntas));
+            preguntasMezcladas = shuffle(copiaPreguntas);
+            
+            indiceActual = 0;
+            puntuacion = 0;
+            document.getElementById('txt-puntuacion').innerText = puntuacion;
+            
+            cambiarPantalla('pantalla-examen');
+            cargarPregunta();
+        }
+
+        function cargarPregunta() {
+            const btnSiguiente = document.getElementById('btn-siguiente');
+            const panelFeedback = document.getElementById('panel-feedback');
+            
+            btnSiguiente.classList.add('hidden');
+            panelFeedback.classList.add('hidden');
+            
+            const preguntaObj = preguntasMezcladas[indiceActual];
+            
+            document.getElementById('txt-progreso').innerText = `${indiceActual + 1} / 15`;
+            document.getElementById('barra-progreso').style.width = `${((indiceActual + 1) / 15) * 100}%`;
+            document.getElementById('txt-pregunta').innerText = preguntaObj.pregunta;
+
+            const contenedor = document.getElementById('contenedor-opciones');
+            contenedor.innerHTML = '';
+            
+            let opcionesListas = shuffle(padOpciones(preguntaObj.opciones));
+            
+            const letras = ['A', 'B', 'C', 'D'];
+            opcionesListas.forEach((op, index) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-xl border-2 border-cyan-100 bg-slate-50 hover:bg-cyan-50 hover:border-wishCyan transition-all flex items-center space-x-4";
+                btn.onclick = () => seleccionarRespuesta(btn, op.correcta, opcionesListas);
+                
+                btn.innerHTML = `
+                    <span class="w-8 h-8 rounded-lg bg-white border border-slate-300 text-wishBlue font-bold flex items-center justify-center shrink-0">
+                        ${letras[index]}
+                    </span>
+                    <span class="opcion-texto text-slate-800">${op.texto}</span>
+                `;
+                contenedor.appendChild(btn);
+            });
+        }
+
+        function seleccionarRespuesta(btnSeleccionado, esCorrecta, todasOpciones) {
+            const botones = document.getElementById('contenedor-opciones').querySelectorAll('button');
+            botones.forEach((btn, index) => {
+                btn.disabled = true;
+                btn.classList.remove('hover:bg-cyan-50', 'hover:border-wishCyan', 'cursor-pointer');
+                
+                if (todasOpciones[index].correcta) {
+                    btn.classList.replace('border-cyan-100', 'border-wishGreen');
+                    btn.classList.replace('bg-slate-50', 'bg-green-50');
+                    let span = btn.querySelector('span');
+                    span.classList.replace('border-slate-300', 'border-wishGreen');
+                    span.classList.replace('bg-white', 'bg-wishGreen');
+                    span.classList.replace('text-wishBlue', 'text-white');
+                }
+            });
+
+            const panelFeedback = document.getElementById('panel-feedback');
+            const feedbackTitulo = document.getElementById('feedback-titulo');
+            const feedbackTexto = document.getElementById('feedback-texto');
+            
+            if (esCorrecta) {
+                puntuacion++;
+                document.getElementById('txt-puntuacion').innerText = puntuacion;
+                
+                panelFeedback.className = "rounded-xl p-5 border shadow-sm transition-all bg-green-50 border-green-200 text-green-900 block";
+                feedbackTitulo.innerHTML = `<span class="text-xl">✅</span> <span>¡Correcto!</span>`;
+            } else {
+                btnSeleccionado.classList.replace('border-wishGreen', 'border-wishRed'); 
+                btnSeleccionado.classList.replace('border-cyan-100', 'border-wishRed');
+                btnSeleccionado.classList.replace('bg-green-50', 'bg-red-50'); 
+                btnSeleccionado.classList.replace('bg-slate-50', 'bg-red-50');
+                
+                let iconSpan = btnSeleccionado.querySelector('span');
+                iconSpan.classList.replace('bg-wishGreen', 'bg-wishRed'); 
+                iconSpan.classList.replace('bg-white', 'bg-wishRed');
+                iconSpan.classList.replace('border-wishGreen', 'border-wishRed'); 
+                iconSpan.classList.replace('border-slate-300', 'border-wishRed');
+                iconSpan.classList.replace('text-wishBlue', 'text-white');
+
+                panelFeedback.className = "rounded-xl p-5 border shadow-sm transition-all bg-red-50 border-red-200 text-red-900 block";
+                feedbackTitulo.innerHTML = `<span class="text-xl">❌</span> <span>Incorrecto</span>`;
+            }
+
+            feedbackTexto.innerText = preguntasMezcladas[indiceActual].explicacion;
+            document.getElementById('btn-siguiente').classList.remove('hidden');
+        }
+
+        function siguientePregunta() {
+            indiceActual++;
+            if (indiceActual < preguntasMezcladas.length) {
+                cargarPregunta();
+            } else {
+                finalizarExamen();
+            }
+        }
+
+        function finalizarExamen() {
+            cambiarPantalla('pantalla-resultados');
+            document.getElementById('txt-puntuacion-final').innerText = `${puntuacion} / 15`;
+            
+            const mensaje = document.getElementById('txt-mensaje-final');
+            const icono = document.getElementById('icono-resultado');
+            
+            if (puntuacion === 15) {
+                mensaje.innerText = "¡Excelente! Dominas perfectamente la arquitectura general del proyecto.";
+                mensaje.className = "font-bold mt-4 text-lg text-wishGreen";
+                icono.innerText = "🏆";
+            } else if (puntuacion >= 10) {
+                mensaje.innerText = "¡Buen trabajo! Tienes buenas bases de cómo se comunican las ventanas.";
+                mensaje.className = "font-bold mt-4 text-lg text-wishCyan";
+                icono.innerText = "👍";
+            } else {
+                mensaje.innerText = "Te recomiendo repasar la guía, especialmente las reglas de negocio en C#.";
+                mensaje.className = "font-bold mt-4 text-lg text-wishRed";
+                icono.innerText = "📚";
+            }
+        }
+
+        function volverAlInicio() {
+            cambiarPantalla('pantalla-inicio');
+        }
+    </script>
+</body>
+</html>
